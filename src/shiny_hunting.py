@@ -1,7 +1,6 @@
 import time
 import json
 import argparse
-import pyautogui
 import cv2
 import os
 import numpy as np
@@ -10,6 +9,7 @@ from sequence_execution import execute_sequence
 from take_screenshot import take_screenshot
 from take_reference_screenshot import take_reference_screenshot
 from savestate import savestate
+from window_utils import wait_for_window_title
 
 
 def load_config(config_path):
@@ -86,8 +86,7 @@ def main():
 
     if args.verbose:
         print("[verbose] Waiting for emulator readiness")
-    while emulator not in (pyautogui.getActiveWindowTitle() or ""):
-        time.sleep(1)
+    wait_for_window_title(emulator)
 
     if not os.path.exists(r"screenshots\reference_screenshot.png"):
         if args.verbose:

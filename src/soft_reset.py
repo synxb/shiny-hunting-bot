@@ -1,12 +1,12 @@
 import time
 import pyautogui
+from window_utils import wait_for_window_title
 
 
 def soft_reset(window_title, verbose=False):
     if verbose:
         print("[verbose] soft_reset: ensuring input target is ready")
-    while window_title not in (pyautogui.getActiveWindowTitle() or ""):
-        time.sleep(1)
+    wait_for_window_title(window_title)
 
     keys = ['L', 'R', 'ENTER', 'SPACE']
     if verbose:

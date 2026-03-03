@@ -1,6 +1,7 @@
 import time
 import json
 import pyautogui
+from window_utils import wait_for_window_title
 
 # Funktion zur Ausführung einer Tastensequenz
 
@@ -27,8 +28,7 @@ def execute_sequence(filename, window_title, verbose=False):
         time.sleep(time_since_start)
         start_time = current_time  # Aktualisierung der Startzeit für die nächste Iteration
 
-        while window_title not in (pyautogui.getActiveWindowTitle() or ""):
-            time.sleep(1)
+        wait_for_window_title(window_title)
 
         if verbose:
             print(
