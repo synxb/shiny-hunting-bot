@@ -50,6 +50,7 @@ All CLI flags are optional except when you want to override defaults:
 - `--sequence` / `-s`: path to recorded sequence file (default: `sequence.json`)
 - `--emulator` / `-e`: emulator window title override (if omitted, uses `emulator` from config)
 - `--verbose` / `-v`: prints detailed backend/window/key event logs for troubleshooting
+- `--screenshot-mode`: `window` (default) or `screen` for full-screen capture
 
 ### 3. Follow the instructions in the terminal
 - Press Enter when you're ready

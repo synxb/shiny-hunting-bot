@@ -63,6 +63,12 @@ def parse_args():
         action="store_true",
         help="Enable verbose logging",
     )
+    parser.add_argument(
+        "--screenshot-mode",
+        choices=["window", "screen"],
+        default="window",
+        help="Screenshot area: window (default) or full screen",
+    )
     return parser.parse_args()
 
 
@@ -74,11 +80,13 @@ def main():
     pokemon_is_shiny = False
     emulator = args.emulator or config["emulator"]
     sequence_path = args.sequence
+    screenshot_mode = args.screenshot_mode
 
     startup_time_after_reset = config["emulatorResetTimeInSeconds"]
     screenshot_time = config["screenshotTimeInSeconds"]
     print("Config loaded successfully!")
     print("Input mode: foreground-only")
+    print(f"Screenshot mode: {screenshot_mode}")
     if args.verbose:
         print("[verbose] Verbose logging enabled")
     print("Record a button sequence using record_sequence.py")
@@ -95,7 +103,11 @@ def main():
         time.sleep(startup_time_after_reset)
         execute_sequence(sequence_path, emulator, verbose=args.verbose)
         time.sleep(screenshot_time)
-        take_reference_screenshot(r"screenshots\reference_screenshot.png", emulator)
+        take_reference_screenshot(
+            r"screenshots\reference_screenshot.png",
+            emulator,
+            capture_mode=screenshot_mode,
+        )
 
     try:
         while not pokemon_is_shiny:
@@ -111,7 +123,10 @@ def main():
                 time.sleep(screenshot_time)
 
                 current_screenshot = take_screenshot(
-                    r"screenshots\current_screenshot.png", emulator)
+                    r"screenshots\current_screenshot.png",
+                    emulator,
+                    capture_mode=screenshot_mode,
+                )
                 reference_image = cv2.imread(
                     r"screenshots\reference_screenshot.png")
                 if current_screenshot is not None and reference_image is not None:
