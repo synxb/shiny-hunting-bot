@@ -1,5 +1,6 @@
 import time
 import json
+import argparse
 import pyautogui
 import cv2
 import os
@@ -34,53 +35,89 @@ def is_shiny_pixel(current_frame, reference_frame, x, y, threshold=50):
     return difference > threshold
 
 
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Automate shiny hunting with configurable config/sequence and emulator."
+    )
+    parser.add_argument(
+        "-c",
+        "--config",
+        default="config.json",
+        help="Path to config JSON file (default: config.json)",
+    )
+    parser.add_argument(
+        "-s",
+        "--sequence",
+        default="sequence.json",
+        help="Path to sequence JSON file (default: sequence.json)",
+    )
+    parser.add_argument(
+        "-e",
+        "--emulator",
+        default=None,
+        help="Emulator window title (overrides config value)",
+    )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="store_true",
+        help="Enable verbose logging",
+    )
+    return parser.parse_args()
+
+
 def main():
-    CONFIG_PATH = "config.json"
-    config = load_config(CONFIG_PATH)
+    args = parse_args()
+    config = load_config(args.config)
     SOFT_RESET_COUNT = config["softResetCount"]
     pixel_x, pixel_y = config["pixelCoordinates"]
     pokemon_is_shiny = False
-    emulator = config["emulator"]
+    emulator = args.emulator or config["emulator"]
+    sequence_path = args.sequence
 
     startup_time_after_reset = config["emulatorResetTimeInSeconds"]
     screenshot_time = config["screenshotTimeInSeconds"]
     print("Config loaded successfully!")
+    print("Input mode: foreground-only")
+    if args.verbose:
+        print("[verbose] Verbose logging enabled")
     print("Record a button sequence using record_sequence.py")
     input("Press Enter, when you're ready...")
 
-    # put your emulator window title here!
-
-    while emulator not in pyautogui.getActiveWindowTitle():
+    if args.verbose:
+        print("[verbose] Waiting for emulator readiness")
+    while emulator not in (pyautogui.getActiveWindowTitle() or ""):
         time.sleep(1)
 
-    # while pyautogui.getActiveWindowTitle() != "[60/60] melonDS 0.9.5":
-    #    time.sleep(1)
-
     if not os.path.exists(r"screenshots\reference_screenshot.png"):
-        soft_reset(emulator)
+        if args.verbose:
+            print("[verbose] No reference screenshot found, creating one")
+        soft_reset(emulator, verbose=args.verbose)
         time.sleep(startup_time_after_reset)
-        execute_sequence('sequence.json', emulator)
+        execute_sequence(sequence_path, emulator, verbose=args.verbose)
         time.sleep(screenshot_time)
-        take_reference_screenshot(r"screenshots\reference_screenshot.png")
+        take_reference_screenshot(r"screenshots\reference_screenshot.png", emulator)
 
     try:
         while not pokemon_is_shiny:
 
             while True:
 
-                soft_reset(emulator)
+                if args.verbose:
+                    print("[verbose] Starting soft reset cycle")
+                soft_reset(emulator, verbose=args.verbose)
                 time.sleep(startup_time_after_reset)
-                execute_sequence('sequence.json', emulator)
+                execute_sequence(sequence_path, emulator, verbose=args.verbose)
 
                 time.sleep(screenshot_time)
 
                 current_screenshot = take_screenshot(
-                    r"screenshots\current_screenshot.png")
+                    r"screenshots\current_screenshot.png", emulator)
                 reference_image = cv2.imread(
                     r"screenshots\reference_screenshot.png")
                 if current_screenshot is not None and reference_image is not None:
                     if is_shiny_pixel(current_screenshot, reference_image, pixel_x, pixel_y):
-                        savestate()
+                        savestate(verbose=args.verbose)
                         pokemon_is_shiny = True
                         print("Shiny Pokémon found!")
                         print(f"Soft Resets: {SOFT_RESET_COUNT}")
@@ -92,7 +129,7 @@ def main():
                 print("Current Resets:", SOFT_RESET_COUNT)
     finally:
         config["softResetCount"] = SOFT_RESET_COUNT
-        save_config(CONFIG_PATH, config)
+        save_config(args.config, config)
 
 
 if __name__ == "__main__":

@@ -20,18 +20,31 @@ pip install pyautogui opencv-python numpy keyboard
 ## Preparation
 
 ### 1. Edit the `config.json` file for your hunt:
-The `config.json` file contains information about your current hunt like soft reset count, pixel coordinates, the time it takes for your chosen emulator to start after a soft reset and the time you want to take the screenshots at. To find the pixel coordinates simply input some dummy values first and let the script take an initial screenshot (after you have fine tuned the timings). From there you can open it in any image editing software to find a suitable pixel for comparison and then put these coordinates in the `config.json` file as well. 
-Lastly edit the `emulator` section of the `config.json` file to match your emulator. NOTE: The window title of the emulator should go there.
+The `config.json` file contains information about your current hunt like soft reset count, pixel coordinates, the time it takes for your chosen emulator to start after a soft reset and the time you want to take the screenshots at. To find the pixel coordinates simply input some dummy values first and let the script take an initial screenshot (after you have fine tuned the timings). From there you can open it in any image editing software to find a suitable pixel for comparison and then put these coordinates in the `config.json` file as well. The screenshot is now captured from the emulator window only, so pixel coordinates must be relative to that emulator screenshot.
+Lastly edit the `emulator` section of the `config.json` file to match your emulator. NOTE: The window title of the emulator should go there. You can also override this via CLI.
 
 ### 2. Record the button sequence:
-Use the `record_sequence.py` script to record the sequence of button presses needed to start the Pokémon encounter. The recorded sequence should be saved in a file named `sequence.json`.
+Use the `record_sequence.py` script to record the sequence of button presses needed to start the Pokémon encounter.
+
+Example:
+```sh
+python src/record_sequence.py --output sequence.json
+```
+
+If `--output` is omitted, it defaults to `sequence.json`.
 
 ## Usage
 ### 1. Start your emulator and load your game
 ### 2. Run the script
 ```sh
-python shiny_hunting.py
+python shiny_hunting.py --config config.json --sequence sequence.json --emulator "melonDS"
 ```
+All CLI flags are optional except when you want to override defaults:
+- `--config` / `-c`: path to config file (default: `config.json`)
+- `--sequence` / `-s`: path to recorded sequence file (default: `sequence.json`)
+- `--emulator` / `-e`: emulator window title override (if omitted, uses `emulator` from config)
+- `--verbose` / `-v`: prints detailed backend/window/key event logs for troubleshooting
+
 ### 3. Follow the instructions in the terminal
 - Press Enter when you're ready
 - The script will now automatically perform soft resets and execute the previously recorded button sequence.
@@ -50,7 +63,7 @@ python shiny_hunting.py
 
 ## Troubleshooting
 - **Coordinate Error**: Ensure that `pixelCoordinates` from the `config.json` file contains the correct coordinates in the format `x,y`.
-- **Emulator Focus**: The script waits for the emulator window to be active. Ensure the window title is correct. The script only works, if the emulator is active. If not, the button sequence execution is paused until the emulator window is active again.
+- **Emulator Focus**: The script waits for the emulator window to be active. Ensure the window title is correct. The script only works if the emulator is active. If not, the button sequence execution is paused until the emulator window is active again.
 
 ## License
 This project is licensed under the MIT License. See the LICENSE file for details.
