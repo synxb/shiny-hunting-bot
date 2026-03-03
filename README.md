@@ -17,6 +17,12 @@ You can install these libraries using the following command:
 pip install pyautogui opencv-python numpy keyboard
 ```
 
+On Linux, install `xdotool` for window title/geometry fallback support:
+
+```sh
+sudo apt install xdotool
+```
+
 ## Preparation
 
 ### 1. Edit the `config.json` file for your hunt:
