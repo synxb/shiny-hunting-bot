@@ -27,16 +27,44 @@ def save_config(config_path, config):
         json.dump(config, file, indent=4)
 
 
-def is_shiny_pixel(current_frame, reference_frame, x, y, threshold=50):
-    current_pixel = current_frame[y, x]
-    reference_pixel = reference_frame[y, x]
+def normalize_pixel_coordinates(pixel_coordinates):
+    if not isinstance(pixel_coordinates, list) or not pixel_coordinates:
+        raise ValueError(
+            "pixelCoordinates must be [x, y] or an array of [x, y] pairs."
+        )
 
-    difference = np.linalg.norm(current_pixel - reference_pixel)
+    if (
+        len(pixel_coordinates) == 2
+        and all(isinstance(value, (int, float)) for value in pixel_coordinates)
+    ):
+        return [[int(pixel_coordinates[0]), int(pixel_coordinates[1])]]
 
-    # print(f"Current pixel: {current_pixel}, Reference pixel: {
-    #      reference_pixel}, Difference: {difference}")
+    normalized = []
+    for coord in pixel_coordinates:
+        if not isinstance(coord, list) or len(coord) != 2:
+            raise ValueError(
+                "Each pixel coordinate must be in [x, y] format."
+            )
+        x_val, y_val = coord
+        if not isinstance(x_val, (int, float)) or not isinstance(y_val, (int, float)):
+            raise ValueError("Pixel coordinates must be numbers.")
+        normalized.append([int(x_val), int(y_val)])
 
-    return difference > threshold
+    if not normalized:
+        raise ValueError("pixelCoordinates must contain at least one coordinate.")
+
+    return normalized
+
+
+def is_shiny_pixel(current_frame, reference_frame, pixel_coordinates, threshold=50):
+    for x_val, y_val in pixel_coordinates:
+        current_pixel = current_frame[y_val, x_val]
+        reference_pixel = reference_frame[y_val, x_val]
+        difference = np.linalg.norm(current_pixel - reference_pixel)
+        if difference > threshold:
+            return True
+
+    return False
 
 
 def parse_args():
@@ -80,7 +108,7 @@ def main():
     args = parse_args()
     config = load_config(args.config)
     SOFT_RESET_COUNT = config["softResetCount"]
-    pixel_x, pixel_y = config["pixelCoordinates"]
+    pixel_coordinates = normalize_pixel_coordinates(config["pixelCoordinates"])
     pokemon_is_shiny = False
     emulator = args.emulator or config["emulator"]
     sequence_path = args.sequence
@@ -91,6 +119,7 @@ def main():
     print("Config loaded successfully!")
     print("Input mode: foreground-only")
     print(f"Screenshot mode: {screenshot_mode}")
+    print(f"Pixel checks configured: {len(pixel_coordinates)}")
     if args.verbose:
         print("[verbose] Verbose logging enabled")
 
@@ -143,7 +172,7 @@ def main():
                 reference_image = cv2.imread(
                     r"screenshots\reference_screenshot.png")
                 if current_screenshot is not None and reference_image is not None:
-                    if is_shiny_pixel(current_screenshot, reference_image, pixel_x, pixel_y):
+                    if is_shiny_pixel(current_screenshot, reference_image, pixel_coordinates):
                         savestate(verbose=args.verbose)
                         pokemon_is_shiny = True
                         print("Shiny Pokémon found!")

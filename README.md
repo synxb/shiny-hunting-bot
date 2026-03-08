@@ -10,11 +10,13 @@ Make sure you have the following Python libraries installed:
 - `opencv-python`
 - `numpy`
 - `keyboard`
+- `pygame` (for optional gamepad recording)
+- `vgamepad` (for gamepad playback/replay)
 
 You can install these libraries using the following command:
 
 ```sh
-pip install pyautogui opencv-python numpy keyboard
+pip install pyautogui opencv-python numpy keyboard pygame vgamepad
 ```
 
 On Linux, install `xdotool` for window title/geometry fallback support:
@@ -27,6 +29,12 @@ sudo apt install xdotool
 
 ### 1. Edit the `config.json` file for your hunt:
 The `config.json` file contains information about your current hunt like soft reset count, pixel coordinates, the time it takes for your chosen emulator to start after a soft reset and the time you want to take the screenshots at. To find the pixel coordinates simply input some dummy values first and let the script take an initial screenshot (after you have fine tuned the timings). From there you can open it in any image editing software to find a suitable pixel for comparison and then put these coordinates in the `config.json` file as well. The screenshot is now captured from the emulator window only, so pixel coordinates must be relative to that emulator screenshot.
+
+`pixelCoordinates` supports both formats:
+- Single point: `[x, y]`
+- Multiple points: `[[x1, y1], [x2, y2], [x3, y3]]`
+
+When multiple points are provided, the script checks all of them and treats the encounter as shiny if **any** monitored pixel differs from the reference.
 Lastly edit the `emulator` section of the `config.json` file to match your emulator. NOTE: The window title of the emulator should go there. You can also override this via CLI.
 
 ### 2. Record the button sequence:
@@ -38,6 +46,20 @@ python src/record_sequence.py --output sequence.json
 ```
 
 If `--output` is omitted, it defaults to `sequence.json`.
+
+To record using a gamepad instead of keyboard input:
+```sh
+python src/record_sequence.py --gamepad --output sequence.json
+```
+
+Additional gamepad flags:
+- `--gamepad`: enables gamepad recording mode
+- `--gamepad-index`: selects which connected gamepad to use (default: `0`)
+- `--gamepad-map`: deprecated in raw gamepad mode and ignored
+
+Gamepad mode now records raw input events (`joybutton`, `joyhat`, `joyaxis`) and replays them as virtual gamepad input instead of keyboard key presses.
+
+Important: re-record your sequence after updating, because old mapped gamepad recordings are not truly raw and may not match your mGBA bindings.
 
 ## Usage
 ### 1. Start your emulator and load your game
@@ -69,7 +91,7 @@ All CLI flags are optional except when you want to override defaults:
 - **`screenshots\current_screenshot.png`**: Current screenshot for comparison.
 
 ## Troubleshooting
-- **Coordinate Error**: Ensure that `pixelCoordinates` from the `config.json` file contains the correct coordinates in the format `x,y`.
+- **Coordinate Error**: Ensure that `pixelCoordinates` contains either `[x, y]` or an array of `[x, y]` pairs.
 - **Emulator Focus**: The script waits for the emulator window to be active. Ensure the window title is correct. The script only works if the emulator is active. If not, the button sequence execution is paused until the emulator window is active again.
 
 ## License
