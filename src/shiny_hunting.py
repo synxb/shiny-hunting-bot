@@ -5,7 +5,11 @@ import cv2
 import os
 import numpy as np
 from soft_reset import soft_reset
-from sequence_execution import execute_sequence
+from sequence_execution import (
+    execute_sequence,
+    sequence_contains_gamepad_events,
+    initialize_virtual_gamepad,
+)
 from take_screenshot import take_screenshot
 from take_reference_screenshot import take_reference_screenshot
 from savestate import savestate
@@ -89,6 +93,15 @@ def main():
     print(f"Screenshot mode: {screenshot_mode}")
     if args.verbose:
         print("[verbose] Verbose logging enabled")
+
+    uses_gamepad_sequence = sequence_contains_gamepad_events(sequence_path)
+    if uses_gamepad_sequence:
+        print("Detected gamepad sequence format.")
+        initialize_virtual_gamepad(verbose=args.verbose)
+        print("Virtual gamepad initialized.")
+        print("If mGBA was already open, restart mGBA now and bind controls to the virtual Xbox 360 controller.")
+        input("Press Enter after mGBA detects the virtual controller...")
+
     print("Record a button sequence using record_sequence.py")
     input("Press Enter, when you're ready...")
 
